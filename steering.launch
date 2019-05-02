@@ -1,0 +1,9 @@
+<launch>
+    <include file="$(find rosserial_server)/launch/serial.launch" />
+    <node name="uno" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM0" />
+    <node name="drive_to_torque" pkg="vugc1_control" type="drive_to_torque.py" />
+    <include file="$(find zed_wrapper)/launch/zed_no_tf.launch">
+        <arg name="resolution" value="2" />
+        <arg name="frame_rate" value="60" />
+    </include>
+</launch>
