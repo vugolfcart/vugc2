@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from vugc1_control.msg import steering_values
+from vugc2_control.msg import Steering
 from vugc1_control.msg import drive_param
 from vugc1_control.srv import VisualEncoder
 from std_msgs.msg import Bool
@@ -9,7 +9,7 @@ from sensor_msgs.msg import Image
 from numpy import interp
 
 
-control_torque_parameters = rospy.Publisher('vugc1_control_torque_parameters', steering_values, queue_size=10)
+control_torque_parameters = rospy.Publisher('vugc2_control_torque_parameters', Steering, queue_size=10)
 
 desired_angle = 0
 perceived_angle = 0
@@ -69,19 +69,19 @@ def on_image(image):
 
     print('(kp, ki, kd)={}, volts={}, torque={}'.format((kp, ki, kd), (voltage_1, voltage_2), (torque_1, torque_2)))
 
-    parameters = steering_values()
+    parameters = Steering()
     parameters.trq_1 = torque_1
     parameters.trq_2 = torque_2
     control_torque_parameters.publish(parameters)
 
 
 def main():
-    rospy.init_node('vugc1_control_steering_pid', anonymous=True)
+    rospy.init_node('vugc2_control_steering_pid', anonymous=True)
     rospy.Subscriber('vugc1_control_drive_parameters', drive_param, on_drive_parameters)
     rospy.Subscriber('zed/rgb/image_rect_color', Image, on_image)
     rospy.spin()
 
 
 if __name__ == '__main__':
-    print('[vugc1_control_steering_pid] initialized')
+    print('[vugc2_control_steering_pid] initialized')
     main()

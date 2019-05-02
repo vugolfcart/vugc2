@@ -18,7 +18,7 @@ void messageSteer(const vugc2_control::Steering &trq);
 
 // ROS
 ros::NodeHandle nh;
-ros::Subscriber<vugc2_control::Steering> vugc1_control_torque_parameters("vugc1_control_torque_parameters", &messageSteer);
+ros::Subscriber<vugc2_control::Steering> vugc1_control_torque_parameters("vugc2_control_torque_parameters", &messageSteer);
 
 
 void messageSteer(const vugc2_control::Steering &trq) {  
