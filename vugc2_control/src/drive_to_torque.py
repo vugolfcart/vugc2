@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 import rospy
-from vugc2_control.msg import Steering
+from vugc2_control.msg import Torque_param
 from vugc1_control.msg import drive_param
 from std_msgs.msg import Bool
 from numpy import interp
 
 
-control_torque_parameters = rospy.Publisher('vugc2_control_torque_parameters', Steering, queue_size=10)
+control_torque_parameters = rospy.Publisher('vugc2_control_torque_parameters', Torque_param, queue_size=10)
 
 voltage_maximum_difference = 1.5
 voltage_center = 2.5
@@ -40,7 +40,7 @@ def callback(data):
 
     print('angle={}, volts={}, torque={}'.format(angle, (voltage1, voltage2), (torque1, torque2)))
 
-    parameters = Steering()
+    parameters = Torque_param()
     parameters.torque1 = torque1
     parameters.torque2 = torque2
     control_torque_parameters.publish(parameters)
