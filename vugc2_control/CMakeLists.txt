@@ -54,7 +54,7 @@ find_package(catkin REQUIRED COMPONENTS
  add_message_files(
     FILES
     Torque_param.msg
-    drive_param.msg
+    Drive_param.msg
     Angle_param.msg
  )
 
