@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 
 import rospy
-from vugc2_control.msg import Steering
-from vugc1_control.msg import drive_param
-from vugc1_control.srv import VisualEncoder
+from vugc2_control.msg import Drive_param, Torque_param, Angle_param
 from std_msgs.msg import Bool
 from sensor_msgs.msg import Image
 from numpy import interp
 
 
-control_torque_parameters = rospy.Publisher('vugc2_control_torque_parameters', Steering, queue_size=10)
+control_torque_parameters = rospy.Publisher('vugc2_control_torque_parameters', Torque_param, queue_size=10)
 
 desired_angle = 0
 perceived_angle = 0
@@ -30,26 +28,13 @@ torque_low = 4095 / 5.0 * voltage_low
 torque_high = 4095 / 5.0 * voltage_high
 
 
-def get_steering_angle(message):
-    rospy.wait_for_service('vugc1_control_visual_encoder')
-    try:
-        visual_encoder = rospy.ServiceProxy('vugc1_control_visual_encoder', VisualEncoder)
-        angle = visual_encoder(message)
-
-        return angle
-    except rospy.ServiceException:
-        print('[vugc1_control_steering_pid] service call failed')
-        return None
-
-
 def on_drive_parameters(data):
     global desired_angle
     desired_angle = data.angle
 
-
-def on_image(image):
+def on_angle_parameters(data):
     global perceived_angle
-    perceived_angle = get_steering_angle(image)
+    perceived_angle = data.angle
 
     global cte, prev_cte, acc_cte
     cte = perceived_angle - desired_angle
@@ -57,7 +42,7 @@ def on_image(image):
     prev_cte = cte
     acc_cte += cte
 
-    voltage_difference = -kp * cte - ki * acc_cte - kd * diff_cte
+    voltage_difference = -(kp * cte + ki * acc_cte + kd * diff_cte)
     # clamp
     voltage_difference = interp(voltage_difference, [-1 * voltage_maximum_difference, voltage_maximum_difference], [-1 * voltage_maximum_difference, voltage_maximum_difference])
     voltage_1 = voltage_center + (voltage_difference / 2.0)
@@ -69,7 +54,7 @@ def on_image(image):
 
     print('(kp, ki, kd)={}, volts={}, torque={}'.format((kp, ki, kd), (voltage_1, voltage_2), (torque_1, torque_2)))
 
-    parameters = Steering()
+    parameters = Torque_param()
     parameters.trq_1 = torque_1
     parameters.trq_2 = torque_2
     control_torque_parameters.publish(parameters)
@@ -77,8 +62,9 @@ def on_image(image):
 
 def main():
     rospy.init_node('vugc2_control_steering_pid', anonymous=True)
-    rospy.Subscriber('vugc1_control_drive_parameters', drive_param, on_drive_parameters)
-    rospy.Subscriber('zed/rgb/image_rect_color', Image, on_image)
+    rospy.Subscriber('vugc1_control_drive_parameters', Drive_param, on_drive_parameters)
+    rospy.Subscriber('vugc2_control_angle_parameters', Angle_param, on_angle_parameters)
+
     rospy.spin()
 
 
