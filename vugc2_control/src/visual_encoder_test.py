@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from sensor_msgs.msg import Image
-from vugc1_control.msg import drive_param
+from vugc1_control.msg import Drive_param
 from vugc1_control.srv import VisualEncoder
 import argparse
 import cv2
@@ -9,7 +9,7 @@ import numpy as np
 import rospy
 
 
-control_drive_parameters = rospy.Publisher('vugc1_control_drive_parameters', drive_param, queue_size=10)
+control_drive_parameters = rospy.Publisher('vugc1_control_drive_parameters', Drive_param, queue_size=10)
 
 
 def get_steering_angle(message):

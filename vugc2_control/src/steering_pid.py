@@ -42,7 +42,7 @@ def on_angle_parameters(data):
     prev_cte = cte
     acc_cte += cte
 
-    voltage_difference = -kp * cte - ki * acc_cte - kd * diff_cte
+    voltage_difference = -(kp * cte + ki * acc_cte + kd * diff_cte)
     # clamp
     voltage_difference = interp(voltage_difference, [-1 * voltage_maximum_difference, voltage_maximum_difference], [-1 * voltage_maximum_difference, voltage_maximum_difference])
     voltage_1 = voltage_center + (voltage_difference / 2.0)
