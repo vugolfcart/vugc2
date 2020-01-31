@@ -55,6 +55,7 @@ find_package(catkin REQUIRED COMPONENTS
     FILES
     Torque_param.msg
     drive_param.msg
+    Angle_param.msg
  )
 
 ## Generate services in the 'srv' folder

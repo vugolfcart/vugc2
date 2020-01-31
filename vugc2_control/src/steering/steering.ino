@@ -30,7 +30,7 @@ Encoder encoder(outputB, outputA);
 // ROS
 ros::NodeHandle nh;
 ros::Subscriber<vugc2_control::Torque_param> vugc2_control_torque_parameters("vugc2_control_torque_parameters", &messageSteer);
-ros::Publisher<vugc2_control::Angle_encoder_param> vugc2_control_angle_parameters("vugc2_control_angle_parameters", &prevAngle);
+ros::Publisher vugc2_control_angle_parameters("vugc2_control_angle_parameters", &prevAngle);
 
 
 void messageSteer(const vugc2_control::Torque_param &trq) {  
