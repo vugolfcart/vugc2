@@ -2,7 +2,7 @@
 
 import rospy
 from vugc2_control.msg import Torque_param
-from vugc1_control.msg import Drive_param
+from vugc2_control.msg import Drive_param
 from std_msgs.msg import Bool
 from numpy import interp
 
@@ -48,7 +48,7 @@ def callback(data):
 
 def main():
     rospy.init_node('vugc2_control_drive_to_torque', anonymous=True)
-    rospy.Subscriber('vugc1_control_drive_parameters', Drive_param, callback)
+    rospy.Subscriber('vugc2_control_drive_parameters', Drive_param, callback)
     rospy.spin()
 
 

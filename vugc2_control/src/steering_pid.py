@@ -11,7 +11,7 @@ control_torque_parameters = rospy.Publisher('vugc2_control_torque_parameters', T
 
 desired_angle = 0
 perceived_angle = 0
-kp = 0
+kp = .5
 ki = 0
 kd = 0
 cte = 0
@@ -33,6 +33,10 @@ def on_drive_parameters(data):
     desired_angle = data.angle
 
 def on_angle_parameters(data):
+    print("ANGLE CALLBACK")
+    print("Desired angle: ", desired_angle)
+    print("Perceived angle: ", data.angle)
+
     global perceived_angle
     perceived_angle = data.angle
 
@@ -43,6 +47,7 @@ def on_angle_parameters(data):
     acc_cte += cte
 
     voltage_difference = -(kp * cte + ki * acc_cte + kd * diff_cte)
+    print("PID controlval: ", voltage_difference)
     # clamp
     voltage_difference = interp(voltage_difference, [-1 * voltage_maximum_difference, voltage_maximum_difference], [-1 * voltage_maximum_difference, voltage_maximum_difference])
     voltage_1 = voltage_center + (voltage_difference / 2.0)
@@ -55,14 +60,14 @@ def on_angle_parameters(data):
     print('(kp, ki, kd)={}, volts={}, torque={}'.format((kp, ki, kd), (voltage_1, voltage_2), (torque_1, torque_2)))
 
     parameters = Torque_param()
-    parameters.trq_1 = torque_1
-    parameters.trq_2 = torque_2
+    parameters.torque1 = torque_1
+    parameters.torque2 = torque_2
     control_torque_parameters.publish(parameters)
 
 
 def main():
     rospy.init_node('vugc2_control_steering_pid', anonymous=True)
-    rospy.Subscriber('vugc1_control_drive_parameters', Drive_param, on_drive_parameters)
+    rospy.Subscriber('vugc2_control_drive_parameters', Drive_param, on_drive_parameters)
     rospy.Subscriber('vugc2_control_angle_parameters', Angle_param, on_angle_parameters)
 
     rospy.spin()
