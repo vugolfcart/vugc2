@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
 import rospy
-from vugc2_control.msg import Torque_param
-from vugc2_control.msg import Drive_param
+from vugc2_control.msg import Torque_param, Drive_param
 from vugc2_control.srv import DriveService
 from std_msgs.msg import Bool
 from numpy import interp
+
+control_torque_parameters = rospy.Publisher('vugc2_control_torque_parameters', Torque_param, queue_size=10)
 
 voltage_maximum_difference = 1.5
 voltage_center = 2.5
@@ -43,12 +44,16 @@ def callback(data):
 
     print('angle={}, volts={}, torque={}'.format(angle, (voltage1, voltage2), (torque1, torque2)))
 
-    return wrapTorqueParams(torque1, torque2)
+    torquePayload = wrapTorqueParams(torque1, torque2)
+
+    control_torque_parameters.publish(torquePayload)
+
+    return torquePayload
 
 
 def main():
     rospy.init_node('vugc2_control_drive_service', anonymous=True)
-    service = rospy.Service('vugc2_control_drive_service', DriveService, callback)
+    rospy.Service('vugc2_control_drive_service', DriveService, callback)
     rospy.spin()
 
 
