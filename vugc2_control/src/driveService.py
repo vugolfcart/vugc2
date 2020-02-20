@@ -28,14 +28,12 @@ def voltsToTorque(voltage1, voltage2):
     torque2 = int(interp(voltage2, [voltage_low, voltage_high], [torque_low, torque_high]))
     return torque1, torque2
 
-def wrapTorqueParams(torque1, torque2):
-    parameters = Torque_param()
-    parameters.torque1 = torque1
-    parameters.torque2 = torque2
-    return parameters
+# def wrapTorqueParams(torque1, torque2):
+#     parameters = Torque_param(torque1, torque2)
+#     return parameters
 
 def callback(data):
-    angle, velocity = data.angle, data.velocity
+    angle, velocity = data.drive_params.angle, data.drive_params.velocity
 
     voltage1, voltage2 = angleToVolts(angle)
 
@@ -43,7 +41,7 @@ def callback(data):
 
     print('angle={}, volts={}, torque={}'.format(angle, (voltage1, voltage2), (torque1, torque2)))
 
-    return wrapTorqueParams(torque1, torque2)
+    return Torque_param(torque1, torque2)
 
 
 def main():

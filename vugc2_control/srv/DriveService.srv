@@ -1,3 +1,3 @@
 vugc2_control/Drive_param drive_params
 ---
-float64 angle
+vugc2_control/Torque_param torque_params
