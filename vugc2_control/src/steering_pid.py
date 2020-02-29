@@ -2,6 +2,7 @@
 
 import rospy
 from vugc2_control.msg import Drive_param, Torque_param, Angle_param
+from vugc2_control.srv import DriveService, DriveServiceRequest, DriveServiceResponse
 from std_msgs.msg import Bool
 from sensor_msgs.msg import Image
 from numpy import interp
@@ -11,58 +12,62 @@ control_torque_parameters = rospy.Publisher('vugc2_control_torque_parameters', T
 
 desired_angle = 0
 perceived_angle = 0
-kp = 0
+kp = .5
 ki = 0
 kd = 0
 cte = 0
 prev_cte = 0
 acc_cte = 0
 
-voltage_maximum_difference = 1.5
-voltage_center = 2.5
-voltage_low = voltage_center - (voltage_maximum_difference / 2.0)
-voltage_high = voltage_center + (voltage_maximum_difference / 2.0)
-steering_low = -100
-steering_high = 100
-torque_low = 4095 / 5.0 * voltage_low
-torque_high = 4095 / 5.0 * voltage_high
-
-
-def on_drive_parameters(data):
-    global desired_angle
-    desired_angle = data.angle
+DESIRED_ANGLE = 0
+PERCEIVED_ANGLE = 0
 
 def on_angle_parameters(data):
-    global perceived_angle
-    perceived_angle = data.angle
+    global PERCEIVED_ANGLE
+    PERCEIVED_ANGLE = data.angle
+
+def drive(driveParams):
+
+    rospy.wait_for_service('vugc2_control_drive_service')
+    try:
+        driveService = rospy.ServiceProxy('vugc2_control_drive_service', DriveService)
+        torqueParams = driveService(driveParams)
+
+        return torqueParams.torque_params
+    except rospy.ServiceException:
+        print('[vugc2_control_drive_service] service call failed')
+        return None
+
+def on_drive_parameters(data):
+    global DESIRED_ANGLE
+    DESIRED_ANGLE = data.angle
+    print("Desired angle: ", DESIRED_ANGLE)
+    print("Perceived angle: ", data.angle)
+
+    # TODO: Arduino doesnt seem to read back angle changes anymore
 
     global cte, prev_cte, acc_cte
-    cte = perceived_angle - desired_angle
+    cte = PERCEIVED_ANGLE - DESIRED_ANGLE
     diff_cte = cte - prev_cte
     prev_cte = cte
     acc_cte += cte
 
-    voltage_difference = -(kp * cte + ki * acc_cte + kd * diff_cte)
-    # clamp
-    voltage_difference = interp(voltage_difference, [-1 * voltage_maximum_difference, voltage_maximum_difference], [-1 * voltage_maximum_difference, voltage_maximum_difference])
-    voltage_1 = voltage_center + (voltage_difference / 2.0)
-    voltage_2 = voltage_center - (voltage_difference / 2.0)
+    target = -(kp * cte + ki * acc_cte + kd * diff_cte)
 
-    # volts to torque
-    torque_1 = int(interp(voltage_1, [voltage_low, voltage_high], [torque_low, torque_high]))
-    torque_2 = int(interp(voltage_2, [voltage_low, voltage_high], [torque_low, torque_high]))
+    print("PID virtual target angle: ", PERCEIVED_ANGLE + target)
 
-    print('(kp, ki, kd)={}, volts={}, torque={}'.format((kp, ki, kd), (voltage_1, voltage_2), (torque_1, torque_2)))
+    print('(kp, ki, kd)={}'.format((kp, ki, kd)))
 
-    parameters = Torque_param()
-    parameters.trq_1 = torque_1
-    parameters.trq_2 = torque_2
-    control_torque_parameters.publish(parameters)
+    driveParams = Drive_param(target, 0) # 0 velocity 
+
+    torqueParams = drive(DriveServiceRequest(driveParams))
+
+    control_torque_parameters.publish(torqueParams)
 
 
 def main():
     rospy.init_node('vugc2_control_steering_pid', anonymous=True)
-    rospy.Subscriber('vugc1_control_drive_parameters', Drive_param, on_drive_parameters)
+    rospy.Subscriber('vugc2_control_drive_parameters', Drive_param, on_drive_parameters)
     rospy.Subscriber('vugc2_control_angle_parameters', Angle_param, on_angle_parameters)
 
     rospy.spin()

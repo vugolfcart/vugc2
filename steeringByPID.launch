@@ -1,6 +1,6 @@
 <launch>
     <include file="$(find rosserial_server)/launch/serial.launch" />
     <node name="drive_service" pkg="vugc2_control" type="driveService.py"/>
-    <node name="drive_to_torque" pkg="vugc2_control" type="drive_to_torque.py"/>
+    <node name="steering_pid" pkg="vugc2_control" type="steering_pid.py" output="screen" />
     <node name="uno" pkg="rosserial_python" type="serial_node.py" args="/dev/ttyACM0" />
 </launch>

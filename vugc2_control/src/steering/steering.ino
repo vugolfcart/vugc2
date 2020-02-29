@@ -23,8 +23,7 @@ vugc2_control::Angle_param prevAngle;
 vugc2_control::Torque_param prev;
 void messageSteer(const vugc2_control::Torque_param &trq);
 
-long angleRead;
-long lastAngleRead;
+float angleRead;
 Encoder encoder(outputB, outputA);
 
 // ROS
@@ -42,9 +41,9 @@ void messageSteer(const vugc2_control::Torque_param &trq) {
   T2.setVoltage(safe.torque2, false);
   delay(50);
 
-  // reset to center
-  T1.setVoltage(TRQ_CENTER, false);
-  T2.setVoltage(TRQ_CENTER, false);
+//   reset to center
+  // T1.setVoltage(TRQ_CENTER, false);
+  // T2.setVoltage(TRQ_CENTER, false);
 
   prev.torque1 = safe.torque1;
   prev.torque2 = safe.torque2;
@@ -52,9 +51,7 @@ void messageSteer(const vugc2_control::Torque_param &trq) {
 
 void publishAngle() {
   angleRead = encoder.read();
-  if (angleRead != lastAngleRead) {
-    lastAngleRead = angleRead;
-    
+  if (angleRead != prevAngle.angle) {    
     prevAngle.angle = angleRead;
     vugc2_control_angle_parameters.publish(&prevAngle);
   }
@@ -62,11 +59,12 @@ void publishAngle() {
 
 void setup() {
   Serial.begin(9600);
-  lastAngleRead = digitalRead(outputA);
-
+  
+  prevAngle.angle = encoder.read();
+  
   T1.begin(0x62);
   T2.begin(0x63);
-
+  
   T1.setVoltage(TRQ_CENTER, false);
   T2.setVoltage(TRQ_CENTER, false);
 
